@@ -19,6 +19,7 @@ export declare class Vpromise<T> implements PromiseLike<T> {
     static resolve<T = undefined>(data?: T): Vpromise<T>;
     static reject(reson: any): Vpromise<{}>;
     static all: PromiseConstructor['all'];
+    static race: PromiseConstructor['race'];
     constructor(excutor: VpromiseExcutor);
     then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): PromiseLike<TResult1 | TResult2>;
     catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult>;
