@@ -41,29 +41,41 @@ export class Vpromise <T> implements PromiseLike<T>{
       const {length} = values;
       const results:any[] = [];
       let count = 0;
+      const addResult = (i: number, data: any) => {
+        results[i] = data;
+        count++;
+        if (length === count) {
+          resolve(results);
+        }
+      }
       for (let i = 0; i < length; i++) {
         const currentVal = values[i];
         if (isPromise(currentVal)) {
           (currentVal as PromiseLike<any>).then((data) => {
-            results[i] = data;
-            count++;
-            if (length === count) {
-              resolve(results);
-            }
+            addResult(i, data);
           }, reject)  
         } else {
-          results[i] = currentVal;
-          count++;
-          if (length === count) {
-            resolve(results);
-          }
+          addResult(i, currentVal);
         }
       }
       
     });
   }
-
-  
+  // @ts-ignore
+  public static race: PromiseConstructor['race'] = function (values: []) {
+    return new Vpromise((resolve, reject) => {
+      for (let i = 0; i < values.length; i++) {
+        const currentVal = values[i];
+        if (isPromise(currentVal)) {
+          (currentVal as PromiseLike<any>).then((data) => {
+            resolve(data);
+          }, reject) 
+        } else {
+          resolve(currentVal);
+        }
+      }
+    });
+  }
   constructor (excutor: VpromiseExcutor) {
     const resolve = (data: T) => {
       if (this.status === 'pending') {
