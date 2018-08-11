@@ -53,6 +53,10 @@ export class Vpromise <T> implements PromiseLike<T>{
           }, reject)  
         } else {
           results[i] = currentVal;
+          count++;
+          if (length === count) {
+            resolve(results);
+          }
         }
       }
       
