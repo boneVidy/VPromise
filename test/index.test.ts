@@ -1,5 +1,11 @@
 import { Vpromise } from "../src";
-
+const asyncGetNumber = (n =100,time = 300) => {
+  return new Vpromise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(n);
+    }, time)
+  } )
+}
 describe('Vpromise test', () => {
   test('should result is an array', async () => {
     expect.assertions(1);
@@ -13,15 +19,22 @@ describe('Vpromise test', () => {
     expect(result).toMatchObject([1,2,3,4,5]);
 
   });
+  test('if params is  a PromiseLike Array  also can get results',async () => {
+    expect.assertions(1);
+    
+    const result = await Vpromise.all([
+      asyncGetNumber(1),
+      asyncGetNumber(2,100),
+      asyncGetNumber(3,30)
+    ]);
+    console.log('====================================');
+    console.log(result);
+    console.log('====================================');
+    expect(result).toMatchObject([1,2,3]);
 
+  });
   test('should use settimeout in Vpromise can return the correct value', async () => {
-    const asyncGetNumber = () => {
-      return new Vpromise((resolve, reject) => {
-        setTimeout(() => {
-          resolve(100);
-        })
-      })
-    }
+    
     expect.assertions(1);
     const result = await asyncGetNumber();
     expect(result).toBe(100);
