@@ -26,4 +26,34 @@ describe('Vpromise test', () => {
     const result = await asyncGetNumber();
     expect(result).toBe(100);
   });
+
+  test('should when promise throw a error, can catch the error by use catch method', async () => {
+    const asyncFn = () => {
+      return new Vpromise((resolve, reject) => {
+        throw new Error("test");
+      });
+    }
+    expect.assertions(1);
+    try {
+      const vp = await asyncFn();
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+    }
+  });
+  test('should when promise reject a error, can catch the error by use catch method', async () => {
+    const asyncFn = () => {
+      return new Vpromise((resolve, reject) => {
+        reject("test error")
+      });
+    }
+    expect.assertions(1);
+    try {
+      const vp = await asyncFn();
+    } catch (error) {
+      console.log('====================================');
+      console.log(error);
+      console.log('====================================');
+      expect(error).toBe("test error");
+    }
+  });
 });
