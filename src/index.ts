@@ -9,7 +9,8 @@ export type Defer<T> = {
   resolve: Resolve;
   reject: Reject;
 }
-export class Vpromise <T = undefined> implements PromiseLike<T>{
+
+export class Vpromise <T> implements PromiseLike<T>{
   private status:VPromiseStatus  = 'pending';
   private value:T | undefined = undefined;
   private reson: any;
@@ -33,12 +34,32 @@ export class Vpromise <T = undefined> implements PromiseLike<T>{
       reject(reson);
     });
   }
-
-  public static all ():Vpromise<any[]> {
+  
+  // @ts-ignore
+  public static all:PromiseConstructor['all'] = function (values: []){
     return new Vpromise((resolve, reject) => {
-
+      const {length} = values;
+      const results:any[] = [];
+      let count = 0;
+      for (let i = 0; i < length; i++) {
+        const currentVal = values[i];
+        if (isPromise(currentVal)) {
+          (currentVal as PromiseLike<any>).then((data) => {
+            results[i] = data;
+            count++;
+            if (length === count) {
+              resolve(results);
+            }
+          }, reject)  
+        } else {
+          results[i] = currentVal;
+        }
+      }
+      
     });
   }
+
+  
   constructor (excutor: VpromiseExcutor) {
     const resolve = (data: T) => {
       if (this.status === 'pending') {
@@ -61,16 +82,18 @@ export class Vpromise <T = undefined> implements PromiseLike<T>{
     }
   }
   public then<TResult1 = T, TResult2 = never>
-  (onFulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-   onRejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): PromiseLike<TResult1 | TResult2> 
+  (onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+   onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): PromiseLike<TResult1 | TResult2> 
    {
-    const onFulfilledHandler:Function = typeof onFulfilled === 'function'? onFulfilled: () => onFulfilled;
-    const onRejectedHandler:Function = typeof onRejected === 'function'? onRejected: () => onRejected;
+    const onFulfilledHandler:Function = typeof onfulfilled === 'function'? onfulfilled: () => onfulfilled;
+    const onRejectedHandler:Function = typeof onrejected === 'function'? onrejected: () => onrejected;
     
     const self = this;
-    const newPromise =  new Vpromise<TResult1>( function (resolve, reject){
+    const newPromise =  new Vpromise<TResult1 | TResult2>( function (resolve, reject){
       
         if (self.status === 'fulfilled') {
+          // @ts-ignore
+
           setTimeout(() => {
             try {
               const value = onFulfilledHandler(self.value)
@@ -82,6 +105,7 @@ export class Vpromise <T = undefined> implements PromiseLike<T>{
           }, 0);
         }
         if (self.status === 'rejected') {
+          // @ts-ignore
           setTimeout(() => {
             try {
               const value = onRejectedHandler(self.reson);
@@ -94,6 +118,8 @@ export class Vpromise <T = undefined> implements PromiseLike<T>{
         }
         if (self.status === 'pending') {
           onFulfilledHandler && self.resolveCbs.push(() => {
+          // @ts-ignore
+
             setTimeout(() => {
               
               try {
@@ -105,7 +131,9 @@ export class Vpromise <T = undefined> implements PromiseLike<T>{
               
             }, 0);
           });
-          onRejected && self.rejectCbs.push(() => {
+          onRejectedHandler && self.rejectCbs.push(() => {
+          // @ts-ignore
+
             setTimeout(() => {
               
               try {
@@ -124,13 +152,15 @@ export class Vpromise <T = undefined> implements PromiseLike<T>{
     return newPromise;
   }
 
-  public catch (onRejected?: OnRejected) {
-    onRejected = typeof onRejected === 'function'? onRejected: () => onRejected;
-    return this.then(() => {}, onRejected);
+  public catch<TResult = never>
+  (onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): Promise<T | TResult> {
+    const onRejectedHandler = typeof onrejected === 'function'? onrejected: () => onrejected;
+    //@ts-ignore
+    return this.then(null, onRejectedHandler);
   }
 }
 
-const resolvePromise = (promise: Vpromise, value: any, resolve: Resolve, reject: Reject) => {
+const resolvePromise = <T=any>(promise: Vpromise<T>, value: any, resolve: Resolve, reject: Reject) => {
   if (promise === value) {
     return reject(new TypeError("chaing cycle"));
   }
@@ -170,3 +200,6 @@ const resolvePromise = (promise: Vpromise, value: any, resolve: Resolve, reject:
 }
 
 
+function isPromise(obj: any) {
+  return !!obj && (typeof obj === 'object' || typeof obj === 'function') && typeof obj.then === 'function';
+}
