@@ -1,5 +1,5 @@
-支持 defer 的Promise
-;;; `const asyncNumber = () => {
+##支持defer对象的Promise
+    `const asyncNumber = () => {
         const defer = VPromise.defer<number>();
         setTimeout(() => {
           defer.resolve(100);
