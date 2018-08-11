@@ -1,4 +1,5 @@
 import { Vpromise } from "../src";
+
 const asyncGetNumber = (n =100,time = 300) => {
   return new Vpromise((resolve, reject) => {
     setTimeout(() => {
@@ -7,21 +8,31 @@ const asyncGetNumber = (n =100,time = 300) => {
   } )
 }
 describe('Vpromise test', () => {
+  test('test Vpromise.defer', async () => {
+    const asyncGetNumber = () => {
+      const defer = Vpromise.defer<number>();
+      setTimeout(() => {
+        defer.resolve(100);
+      })
+      return defer.promise;
+    }
+    expect.assertions(1);
+    const result = await asyncGetNumber();
+    expect(result).toBe(100);
+  });
   test('should result is an array', async () => {
     expect.assertions(1);
     const result = await Vpromise.all([1,2,3,4,5]);
     expect(result).toBeInstanceOf(Array);
 
   });
-  test('if params is not a PromiseLike Array  also can get results',async () => {
+  test('if params is not a PromiseLike Array can  also  get results',async () => {
     expect.assertions(1);
     const result = await Vpromise.all([1,2,3,4,5]);
     expect(result).toMatchObject([1,2,3,4,5]);
-
   });
-  test('if params is  a PromiseLike Array  also can get results',async () => {
+  test('if params is  a PromiseLike Array can  also  get results',async () => {
     expect.assertions(1);
-    
     const result = await Vpromise.all([
       asyncGetNumber(1),
       asyncGetNumber(2,100),
